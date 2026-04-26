@@ -1,0 +1,36 @@
+; ---- Procedure with a parameter, body using REPEAT and the parameter ----
+to square :size
+repeat 4 [forward :size right 90]
+end
+
+; ---- Global introduced by MAKE, then read ----
+make "tile 60
+square :tile
+
+; ---- Scope-aware: same name :tile inside a procedure with LOCAL shadowing ----
+to wobble
+local "tile
+make "tile 10
+forward :tile     ; this :tile is the LOCAL, not the global
+end
+wobble
+
+; ---- IFELSE, comparison expression, OUTPUT ----
+to bigger? :a :b
+ifelse :a > :b [output "true] [output "false]
+end
+
+; ---- Diagnostics fixtures (one per rule) ----
+dance 5              ; LOGO002 — undefined procedure
+print :missing       ; LOGO003 — undefined variable
+home 1               ; LOGO004 — wrong arity (home takes 0 args)
+
+to forward :n        ; LOGO005 — shadows built-in
+back :n
+end
+
+to dup  print "hi  end
+to dup  print "bye  end   ; LOGO005 — duplicate user procedure
+
+; ---- Force a syntax error somewhere by uncommenting next line ----
+; repeat 4 [forward 100   ; LOGO001 — unclosed bracket
