@@ -27,6 +27,8 @@ data class ProcedureDef(
     val parameters: List<Parameter>,
     val body: List<Statement>,
     override val range: Range,
+    val toKeywordRange: Range,
+    val endKeywordRange: Range,
 ) : Statement
 
 data class Parameter(
@@ -44,6 +46,7 @@ data class IfStmt(
     val condition: Expression,
     val body: ListLiteral,
     override val range: Range,
+    val keywordRange: Range,
 ) : Statement
 
 data class IfElseStmt(
@@ -51,32 +54,38 @@ data class IfElseStmt(
     val thenBody: ListLiteral,
     val elseBody: ListLiteral,
     override val range: Range,
+    val keywordRange: Range,
 ) : Statement
 
 data class RepeatStmt(
     val count: Expression,
     val body: ListLiteral,
     override val range: Range,
+    val keywordRange: Range,
 ) : Statement
 
 data class MakeStmt(
     val target: MakeTarget,
     val value: Expression,
     override val range: Range,
+    val keywordRange: Range,
 ) : Statement
 
 data class LocalStmt(
     val names: List<QuotedWord>,
     override val range: Range,
+    val keywordRange: Range,
 ) : Statement
 
 data class OutputStmt(
     val value: Expression,
     override val range: Range,
+    val keywordRange: Range,
 ) : Statement
 
 data class StopStmt(
     override val range: Range,
+    val keywordRange: Range,
 ) : Statement
 
 // ---------- Expressions ----------

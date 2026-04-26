@@ -19,7 +19,7 @@ object AstBuilder {
         ctx.makeStmt() != null -> buildMakeStmt(ctx.makeStmt())
         ctx.localStmt() != null -> buildLocalStmt(ctx.localStmt())
         ctx.outputStmt() != null -> buildOutputStmt(ctx.outputStmt())
-        ctx.stopStmt() != null -> StopStmt(ctx.toRange())
+        ctx.stopStmt() != null -> buildStopStmt(ctx.stopStmt())
         ctx.call() != null -> buildCall(ctx.call())
         else -> error("unrecognised statement: ${ctx.text}")
     }
@@ -30,6 +30,8 @@ object AstBuilder {
             parameters = ctx.parameter().map(::buildParameter),
             body = ctx.body().statement().map(::buildStatement),
             range = ctx.toRange(),
+            toKeywordRange = ctx.TO().symbol.toRange(),
+            endKeywordRange = ctx.END().symbol.toRange(),
         )
     }
 
@@ -41,6 +43,7 @@ object AstBuilder {
             condition = buildExpression(ctx.expression()),
             body = buildListLiteral(ctx.listLiteral()),
             range = ctx.toRange(),
+            keywordRange = ctx.IF().symbol.toRange(),
         )
 
     private fun buildIfElseStmt(ctx: LogoParser.IfelseStmtContext): IfElseStmt {
@@ -50,6 +53,7 @@ object AstBuilder {
             thenBody = buildListLiteral(lists[0]),
             elseBody = buildListLiteral(lists[1]),
             range = ctx.toRange(),
+            keywordRange = ctx.IFELSE().symbol.toRange(),
         )
     }
 
@@ -58,19 +62,38 @@ object AstBuilder {
             count = buildExpression(ctx.expression()),
             body = buildListLiteral(ctx.listLiteral()),
             range = ctx.toRange(),
+            keywordRange = ctx.REPEAT().symbol.toRange(),
         )
 
     private fun buildMakeStmt(ctx: LogoParser.MakeStmtContext): MakeStmt {
         val target: MakeTarget = ctx.quotedWord()?.let(::buildQuotedWord)
             ?: buildVarRef(ctx.varRef())
-        return MakeStmt(target, buildExpression(ctx.expression()), ctx.toRange())
+        return MakeStmt(
+            target = target,
+            value = buildExpression(ctx.expression()),
+            range = ctx.toRange(),
+            keywordRange = ctx.MAKE().symbol.toRange(),
+        )
     }
 
     private fun buildLocalStmt(ctx: LogoParser.LocalStmtContext): LocalStmt =
-        LocalStmt(ctx.quotedWord().map(::buildQuotedWord), ctx.toRange())
+        LocalStmt(
+            names = ctx.quotedWord().map(::buildQuotedWord),
+            range = ctx.toRange(),
+            keywordRange = ctx.LOCAL().symbol.toRange(),
+        )
 
     private fun buildOutputStmt(ctx: LogoParser.OutputStmtContext): OutputStmt =
-        OutputStmt(buildExpression(ctx.expression()), ctx.toRange())
+        OutputStmt(
+            value = buildExpression(ctx.expression()),
+            range = ctx.toRange(),
+            // The grammar accepts either OUTPUT or OP at this position; pick
+            // whichever was actually matched (the other is null).
+            keywordRange = (ctx.OUTPUT() ?: ctx.OP()).symbol.toRange(),
+        )
+
+    private fun buildStopStmt(ctx: LogoParser.StopStmtContext): StopStmt =
+        StopStmt(range = ctx.toRange(), keywordRange = ctx.STOP().symbol.toRange())
 
     private fun buildCall(ctx: LogoParser.CallContext): Call =
         Call(
