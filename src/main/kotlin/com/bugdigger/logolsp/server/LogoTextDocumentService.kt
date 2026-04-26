@@ -2,6 +2,7 @@ package com.bugdigger.logolsp.server
 
 import com.bugdigger.logolsp.analysis.DocumentManager
 import com.bugdigger.logolsp.features.DefinitionProvider
+import com.bugdigger.logolsp.features.RenameProvider
 import com.bugdigger.logolsp.features.SemanticTokensProvider
 import org.eclipse.lsp4j.DefinitionParams
 import org.eclipse.lsp4j.DidChangeTextDocumentParams
@@ -10,9 +11,14 @@ import org.eclipse.lsp4j.DidOpenTextDocumentParams
 import org.eclipse.lsp4j.DidSaveTextDocumentParams
 import org.eclipse.lsp4j.Location
 import org.eclipse.lsp4j.LocationLink
+import org.eclipse.lsp4j.PrepareRenameDefaultBehavior
+import org.eclipse.lsp4j.PrepareRenameParams
+import org.eclipse.lsp4j.PrepareRenameResult
+import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.SemanticTokens
 import org.eclipse.lsp4j.SemanticTokensParams
 import org.eclipse.lsp4j.jsonrpc.messages.Either
+import org.eclipse.lsp4j.jsonrpc.messages.Either3
 import org.eclipse.lsp4j.services.TextDocumentService
 import java.util.concurrent.CompletableFuture
 
@@ -62,5 +68,15 @@ class LogoTextDocumentService(private val documents: DocumentManager) : TextDocu
             SemanticTokens(mutableListOf())
         }
         return CompletableFuture.completedFuture(tokens)
+    }
+
+    override fun prepareRename(
+        params: PrepareRenameParams,
+    ): CompletableFuture<Either3<Range, PrepareRenameResult, PrepareRenameDefaultBehavior>> {
+        val analysis = documents.analysis(params.textDocument.uri)
+            ?: return CompletableFuture.completedFuture(null)
+        val result = RenameProvider.prepareRename(analysis, params.position)
+            ?: return CompletableFuture.completedFuture(null)
+        return CompletableFuture.completedFuture(Either3.forSecond(result))
     }
 }

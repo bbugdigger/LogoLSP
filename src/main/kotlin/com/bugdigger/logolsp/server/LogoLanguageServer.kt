@@ -4,9 +4,11 @@ import com.bugdigger.logolsp.analysis.DocumentManager
 import com.bugdigger.logolsp.features.SemanticTokensProvider
 import org.eclipse.lsp4j.InitializeParams
 import org.eclipse.lsp4j.InitializeResult
+import org.eclipse.lsp4j.RenameOptions
 import org.eclipse.lsp4j.SemanticTokensWithRegistrationOptions
 import org.eclipse.lsp4j.ServerCapabilities
 import org.eclipse.lsp4j.TextDocumentSyncKind
+import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.LanguageClientAware
 import org.eclipse.lsp4j.services.LanguageServer
@@ -30,7 +32,9 @@ class LogoLanguageServer : LanguageServer, LanguageClientAware {
             setSemanticTokensProvider(
                 SemanticTokensWithRegistrationOptions(SemanticTokensProvider.legend, true, false),
             )
-            // rename advertises in Phase 5.3.
+            // Rename with prepare support so the client validates the cursor
+            // position via prepareRename before showing the rename UI.
+            setRenameProvider(Either.forRight(RenameOptions(true)))
         }
         return CompletableFuture.completedFuture(InitializeResult(capabilities))
     }
