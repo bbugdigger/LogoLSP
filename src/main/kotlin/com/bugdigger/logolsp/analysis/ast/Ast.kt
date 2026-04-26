@@ -128,6 +128,12 @@ data class ParenCall(
     override val range: Range,
 ) : Atom
 
+// A parenthesised expression used as a value, e.g. `forward (2 + 3)`.
+data class ParenExpr(
+    val expr: Expression,
+    override val range: Range,
+) : Atom
+
 // ---------- Marker interfaces ----------
 
 // Targets of `MAKE`: either a quoted name (`make "x ...`) or an existing
