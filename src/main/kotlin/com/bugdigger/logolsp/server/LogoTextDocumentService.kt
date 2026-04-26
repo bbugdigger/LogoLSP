@@ -2,6 +2,7 @@ package com.bugdigger.logolsp.server
 
 import com.bugdigger.logolsp.analysis.DocumentManager
 import com.bugdigger.logolsp.features.DefinitionProvider
+import com.bugdigger.logolsp.features.SemanticTokensProvider
 import org.eclipse.lsp4j.DefinitionParams
 import org.eclipse.lsp4j.DidChangeTextDocumentParams
 import org.eclipse.lsp4j.DidCloseTextDocumentParams
@@ -9,6 +10,8 @@ import org.eclipse.lsp4j.DidOpenTextDocumentParams
 import org.eclipse.lsp4j.DidSaveTextDocumentParams
 import org.eclipse.lsp4j.Location
 import org.eclipse.lsp4j.LocationLink
+import org.eclipse.lsp4j.SemanticTokens
+import org.eclipse.lsp4j.SemanticTokensParams
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.TextDocumentService
 import java.util.concurrent.CompletableFuture
@@ -49,5 +52,15 @@ class LogoTextDocumentService(private val documents: DocumentManager) : TextDocu
             mutableListOf()
         }
         return CompletableFuture.completedFuture(Either.forLeft(locations))
+    }
+
+    override fun semanticTokensFull(params: SemanticTokensParams): CompletableFuture<SemanticTokens> {
+        val analysis = documents.analysis(params.textDocument.uri)
+        val tokens = if (analysis != null) {
+            SemanticTokensProvider.semanticTokens(analysis)
+        } else {
+            SemanticTokens(mutableListOf())
+        }
+        return CompletableFuture.completedFuture(tokens)
     }
 }

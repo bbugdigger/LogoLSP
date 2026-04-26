@@ -1,8 +1,10 @@
 package com.bugdigger.logolsp.server
 
 import com.bugdigger.logolsp.analysis.DocumentManager
+import com.bugdigger.logolsp.features.SemanticTokensProvider
 import org.eclipse.lsp4j.InitializeParams
 import org.eclipse.lsp4j.InitializeResult
+import org.eclipse.lsp4j.SemanticTokensWithRegistrationOptions
 import org.eclipse.lsp4j.ServerCapabilities
 import org.eclipse.lsp4j.TextDocumentSyncKind
 import org.eclipse.lsp4j.services.LanguageClient
@@ -25,7 +27,10 @@ class LogoLanguageServer : LanguageServer, LanguageClientAware {
             // documents grow large enough to make incremental sync worthwhile.
             setTextDocumentSync(TextDocumentSyncKind.Full)
             setDefinitionProvider(true)
-            // semanticTokens and rename advertise as each provider lands.
+            setSemanticTokensProvider(
+                SemanticTokensWithRegistrationOptions(SemanticTokensProvider.legend, true, false),
+            )
+            // rename advertises in Phase 5.3.
         }
         return CompletableFuture.completedFuture(InitializeResult(capabilities))
     }
