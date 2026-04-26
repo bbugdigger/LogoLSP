@@ -179,27 +179,23 @@ class Resolver {
     }
 
     private fun registerMakeAsGlobalIfNew(stmt: MakeStmt, currentProcScope: Scope?) {
-        val nameAndRange = makeTargetNameAndRange(stmt.target) ?: return
-        val (name, nameRange) = nameAndRange
-        // Already in scope (parameter / local / pre-existing global)? Don't
-        // create anything; the MAKE is an assignment, resolved in pass 2.
+        // Only `make "name ...` introduces (or assigns to) a variable directly
+        // by name. `make :foo ...` reads :foo to get the target name at run
+        // time; for static analysis we treat :foo as a normal variable
+        // reference and don't create anything here.
+        val target = stmt.target as? QuotedWord ?: return
+        val name = target.name.text
         if (currentProcScope?.lookup(name) != null) return
         if (table.globalScope.lookupLocal(name) != null) return
-        // First MAKE for this name → it defines the global.
-        val symbol = VariableSymbol(
-            name = name,
-            definitionRange = stmt.range,
-            nameRange = nameRange,
-            scope = VariableScope.GLOBAL,
+        table.globalScope.define(
+            VariableSymbol(
+                name = name,
+                definitionRange = stmt.range,
+                nameRange = target.name.range,
+                scope = VariableScope.GLOBAL,
+            ),
         )
-        table.globalScope.define(symbol)
     }
-
-    private fun makeTargetNameAndRange(target: MakeTarget): Pair<String, org.eclipse.lsp4j.Range>? =
-        when (target) {
-            is QuotedWord -> target.name.text to target.name.range
-            is VarRef -> target.name.text to target.name.range
-        }
 
     // ----------------------- Pass 2: references -----------------------
 
@@ -293,15 +289,22 @@ class Resolver {
     }
 
     private fun resolveMakeTarget(target: MakeTarget, currentProcScope: Scope?) {
-        val (name, nameRange) = makeTargetNameAndRange(target) ?: return
-        val symbol = currentProcScope?.lookup(name) ?: table.globalScope.lookup(name)
-        if (symbol != null) {
-            // Avoid duplicating the entry that pass 1 already added when this
-            // is the very first MAKE that defined the global.
-            if (symbol.references.none { it == nameRange }) {
-                symbol.references.add(nameRange)
+        when (target) {
+            is QuotedWord -> {
+                val name = target.name.text
+                val symbol = currentProcScope?.lookup(name) ?: table.globalScope.lookup(name)
+                if (symbol != null) {
+                    // Avoid duplicating the entry pass 1 already added when
+                    // this is the very first MAKE that defined the global.
+                    if (symbol.references.none { it == target.name.range }) {
+                        symbol.references.add(target.name.range)
+                    }
+                    resolution[target] = symbol
+                }
             }
-            resolution[target] = symbol
+            // `make :foo ...` — :foo is read like any other variable reference,
+            // so let the standard VarRef path handle resolution and diagnostics.
+            is VarRef -> resolveVarRef(target, currentProcScope)
         }
     }
 }
