@@ -2,6 +2,7 @@ package com.bugdigger.logolsp.server
 
 import com.bugdigger.logolsp.analysis.DocumentManager
 import com.bugdigger.logolsp.features.DefinitionProvider
+import com.bugdigger.logolsp.features.RenameOutcome
 import com.bugdigger.logolsp.features.RenameProvider
 import com.bugdigger.logolsp.features.SemanticTokensProvider
 import org.eclipse.lsp4j.DefinitionParams
@@ -15,10 +16,15 @@ import org.eclipse.lsp4j.PrepareRenameDefaultBehavior
 import org.eclipse.lsp4j.PrepareRenameParams
 import org.eclipse.lsp4j.PrepareRenameResult
 import org.eclipse.lsp4j.Range
+import org.eclipse.lsp4j.RenameParams
 import org.eclipse.lsp4j.SemanticTokens
 import org.eclipse.lsp4j.SemanticTokensParams
+import org.eclipse.lsp4j.WorkspaceEdit
+import org.eclipse.lsp4j.jsonrpc.ResponseErrorException
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.jsonrpc.messages.Either3
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseError
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseErrorCode
 import org.eclipse.lsp4j.services.TextDocumentService
 import java.util.concurrent.CompletableFuture
 
@@ -78,5 +84,20 @@ class LogoTextDocumentService(private val documents: DocumentManager) : TextDocu
         val result = RenameProvider.prepareRename(analysis, params.position)
             ?: return CompletableFuture.completedFuture(null)
         return CompletableFuture.completedFuture(Either3.forSecond(result))
+    }
+
+    override fun rename(params: RenameParams): CompletableFuture<WorkspaceEdit> {
+        val uri = params.textDocument.uri
+        val analysis = documents.analysis(uri)
+            ?: return CompletableFuture.completedFuture(WorkspaceEdit())
+        return when (val outcome = RenameProvider.rename(analysis, uri, params.position, params.newName)) {
+            is RenameOutcome.Edit -> CompletableFuture.completedFuture(outcome.workspaceEdit)
+            is RenameOutcome.Invalid -> {
+                val error = ResponseError(ResponseErrorCode.InvalidParams, outcome.message, null)
+                val future = CompletableFuture<WorkspaceEdit>()
+                future.completeExceptionally(ResponseErrorException(error))
+                future
+            }
+        }
     }
 }

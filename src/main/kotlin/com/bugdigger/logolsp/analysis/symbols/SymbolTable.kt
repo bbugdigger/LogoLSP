@@ -25,4 +25,9 @@ class SymbolTable {
     fun procedureScope(name: String): Scope? = procedureScopes[name]
 
     fun procedures(): Collection<ProcedureSymbol> = procedures.values
+
+    // Read-only view over all procedure scopes; used by the rename provider
+    // to locate the scope a parameter or local belongs to so it can check
+    // for same-scope name collisions.
+    fun allProcedureScopes(): Collection<Scope> = procedureScopes.values
 }
