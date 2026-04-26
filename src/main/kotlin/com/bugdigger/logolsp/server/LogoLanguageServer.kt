@@ -24,8 +24,8 @@ class LogoLanguageServer : LanguageServer, LanguageClientAware {
             // on every change. Cheap given LOGO programs are tiny; revisit if
             // documents grow large enough to make incremental sync worthwhile.
             setTextDocumentSync(TextDocumentSyncKind.Full)
-            // Feature-provider capabilities (definition, semanticTokens,
-            // rename) are advertised in Phase 5 as each provider lands.
+            setDefinitionProvider(true)
+            // semanticTokens and rename advertise as each provider lands.
         }
         return CompletableFuture.completedFuture(InitializeResult(capabilities))
     }
