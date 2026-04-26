@@ -68,12 +68,14 @@ listLiteral : LBRACKET (statement | atom)* RBRACKET ;
 varRef     : COLON identifier ;
 quotedWord : QUOTE identifier ;
 
-// Keywords are also accepted in identifier positions (variable refs,
-// parameter names, procedure names) so users aren't blocked from naming
-// `:if` or defining `to to ... end` in pathological cases.
+// Most keywords are also accepted in identifier positions (variable refs,
+// parameter names, procedure names) so users can name `:if` or `:make`.
+// TO and END are deliberately excluded: they delimit `procedureDef` and
+// allowing them as identifiers makes the body match greedily swallow the
+// next procedure's TO ... END as no-arg calls.
 identifier
     : ID
-    | TO | END | IF | IFELSE | REPEAT | MAKE | LOCAL | OUTPUT | OP | STOP
+    | IF | IFELSE | REPEAT | MAKE | LOCAL | OUTPUT | OP | STOP
     ;
 
 // ============================================================================
