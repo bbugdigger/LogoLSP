@@ -15,7 +15,7 @@ The diagnostics + rename combo is a deliberate strategic choice: rename exercise
 
 ## Build & run
 
-Requires JDK 21.
+Requires JDK 17 or newer.
 
 ```bash
 ./gradlew test           # run the test suite (~60 tests across 7 suites)
