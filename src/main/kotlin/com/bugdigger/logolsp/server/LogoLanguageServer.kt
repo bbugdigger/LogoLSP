@@ -1,5 +1,6 @@
 package com.bugdigger.logolsp.server
 
+import com.bugdigger.logolsp.analysis.DocumentManager
 import org.eclipse.lsp4j.InitializeParams
 import org.eclipse.lsp4j.InitializeResult
 import org.eclipse.lsp4j.ServerCapabilities
@@ -13,11 +14,9 @@ import java.util.concurrent.CompletableFuture
 
 class LogoLanguageServer : LanguageServer, LanguageClientAware {
 
-    private val textDocumentService = LogoTextDocumentService()
+    private val documents = DocumentManager()
+    private val textDocumentService = LogoTextDocumentService(documents)
     private val workspaceService = LogoWorkspaceService()
-
-    @Volatile
-    private var client: LanguageClient? = null
 
     override fun initialize(params: InitializeParams): CompletableFuture<InitializeResult> {
         val capabilities = ServerCapabilities().apply {
@@ -46,6 +45,6 @@ class LogoLanguageServer : LanguageServer, LanguageClientAware {
     override fun getWorkspaceService(): WorkspaceService = workspaceService
 
     override fun connect(client: LanguageClient) {
-        this.client = client
+        documents.attach(client)
     }
 }
