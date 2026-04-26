@@ -35,11 +35,12 @@ The recommended client is **[LSP4IJ](https://github.com/redhat-developer/lsp4ij)
 
 1. Build the server: `./gradlew installDist`.
 2. In IntelliJ IDEA: **Settings → Plugins**, install **LSP4IJ**.
-3. **Settings → Languages & Frameworks → Language Servers → New**:
+3. **Settings → Editor → File Types → Text** → add `*.logo` to the file-name patterns. LSP4IJ keys off IntelliJ's file-type system, so the extension has to be a recognised type before the next step takes effect.
+4. **Settings → Languages & Frameworks → Language Servers → New**:
    - **Name:** LogoLSP
    - **Command:** absolute path to `build/install/LogoLSP/bin/LogoLSP` (or `.bat` on Windows)
    - **Mappings → File name patterns:** `*.logo`
-4. Open any `.logo` file. Expected behaviour:
+5. Open any `.logo` file. Expected behaviour:
    - Keywords, function names, variables, parameters, strings, numbers, and comments are highlighted.
    - **Ctrl-click** on a procedure call jumps to its `to ... end`.
    - **Ctrl-click** on `:foo` jumps to its parameter, `local`, or first `make`.
